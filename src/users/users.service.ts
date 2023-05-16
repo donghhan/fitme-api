@@ -3,6 +3,8 @@ import { User } from './entities/users.entity';
 import { Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { CreateAccountInput } from './dtos/createAccount.dto';
+import { LoginInput } from './dtos/login.dto';
+import { CreateAccountProps, LoginProps } from './interfaces/users.interface';
 
 @Injectable()
 export class UsersService {
@@ -17,7 +19,7 @@ export class UsersService {
     mobileNumber,
     firstName,
     lastName,
-  }: CreateAccountInput): Promise<{ ok: boolean; error?: string }> {
+  }: CreateAccountInput): Promise<CreateAccountProps> {
     // Check if email address is already taken
     try {
       const existingUser = await this.users.findOne({
@@ -44,5 +46,29 @@ export class UsersService {
         error: "Couldn't create account due to unknown error. Try again later.",
       };
     }
+  }
+
+  async login({ email, password }: LoginInput): Promise<LoginProps> {
+    // Find a user with email
+    try {
+      const userWithEmail = await this.users.findOne({ where: { email } });
+      if (!userWithEmail) {
+        return { ok: false, error: 'User not found.' };
+      }
+
+      const passwordCorrect = await userWithEmail.checkHashedPassword(password);
+      if (!passwordCorrect) {
+        return { ok: false, error: 'Password does not match.' };
+      }
+
+      return {
+        ok: true,
+        token: 'test-token',
+      };
+    } catch (error: any) {
+      return { ok: false, error };
+    }
+    // Check if password is correct
+    // Make a JWT and give it to user
   }
 }

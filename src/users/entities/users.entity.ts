@@ -58,4 +58,14 @@ export class User extends CommonEntity {
       throw new InternalServerErrorException();
     }
   }
+
+  async checkHashedPassword(userPassword: string): Promise<boolean> {
+    try {
+      const ok = await bcrypt.compare(userPassword, this.password);
+      return ok;
+    } catch (error: any) {
+      console.log(error);
+      throw new InternalServerErrorException();
+    }
+  }
 }
