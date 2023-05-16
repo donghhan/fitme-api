@@ -5,11 +5,13 @@ import { Injectable } from '@nestjs/common';
 import { CreateAccountInput } from './dtos/createAccount.dto';
 import { LoginInput } from './dtos/login.dto';
 import { CreateAccountProps, LoginProps } from './interfaces/users.interface';
+import { JwtService } from 'src/jwt/jwt.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User) private readonly users: Repository<User>,
+    private readonly jwtService: JwtService,
   ) {}
 
   async createAccount({
@@ -61,14 +63,14 @@ export class UsersService {
         return { ok: false, error: 'Password does not match.' };
       }
 
+      const token = this.jwtService.sign({ id: userWithEmail.id });
+
       return {
         ok: true,
-        token: 'test-token',
+        token,
       };
     } catch (error: any) {
       return { ok: false, error };
     }
-    // Check if password is correct
-    // Make a JWT and give it to user
   }
 }
