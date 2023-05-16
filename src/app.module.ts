@@ -4,8 +4,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { ConfigModule } from '@nestjs/config';
 import configuration from './config/configuration';
-import { RestaurantsModule } from './restaurants/restaurants.module';
-import { Restaurant } from './restaurants/models/restaurant.model';
+import { UsersModule } from './users/users.module';
+import { CommonModule } from './common/common.module';
+import { User } from './users/entities/users.entity';
 
 @Module({
   imports: [
@@ -22,14 +23,15 @@ import { Restaurant } from './restaurants/models/restaurant.model';
       password: process.env.DATABASE_PASSWORD,
       synchronize: true,
       logging: true,
-      entities: [Restaurant],
+      entities: [User],
       retryDelay: 3500,
       retryAttempts: 5,
     }),
     ConfigModule.forRoot({
       load: [configuration],
     }),
-    RestaurantsModule,
+    UsersModule,
+    CommonModule,
   ],
   controllers: [],
   providers: [],
