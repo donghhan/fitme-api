@@ -1,33 +1,61 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { BeforeInsert, Column, Entity } from 'typeorm';
+import {
+  Field,
+  InputType,
+  ObjectType,
+  registerEnumType,
+} from '@nestjs/graphql';
+import * as bcrypt from 'bcrypt';
 import { CommonEntity } from 'src/common/entities/common.entity';
-import { Field } from '@nestjs/graphql';
+import { InternalServerErrorException } from '@nestjs/common';
 
-type RoleType = 'admin' | 'customer' | 'delivery';
-
-export class Name {
-  @Column()
-  first: string;
-
-  @Column()
-  last: string;
+enum RoleType {
+  Admin,
+  Client,
+  Delivery,
 }
 
+registerEnumType(RoleType, { name: 'RoleType' });
+
+@InputType({ isAbstract: true })
+@ObjectType()
 @Entity()
 export class User extends CommonEntity {
-  @Field()
-  @Column((type) => Name)
-  name: Name;
+  @Field((type) => String)
+  @Column()
+  firstName: string;
 
+  @Field((type) => String)
+  @Column()
+  lastName: string;
+
+  @Field((type) => String)
   @Column()
   email: string;
 
+  @Field((type) => RoleType)
   @Column()
   role: RoleType;
 
-  @Column()
+  @Field((type) => Boolean)
+  @Column({ default: true })
   isActive: boolean;
 
-  @Field({ nullable: true })
+  @Field((type) => String)
+  @Column()
+  password: string;
+
+  @Field((type) => String, { nullable: true })
   @Column()
   mobileNumber: string;
+
+  @BeforeInsert()
+  async hashPassword(): Promise<void> {
+    try {
+      this.password = await bcrypt.hash(this.password, 10);
+    } catch (error: any) {
+      console.log(error);
+      throw new InternalServerErrorException();
+    }
+  }
 }

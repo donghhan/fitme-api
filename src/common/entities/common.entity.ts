@@ -7,13 +7,15 @@ import {
 
 @ObjectType()
 export class CommonEntity {
-  @Field((type) => Int)
+  @Field((type) => Number)
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Field((type) => Date)
   @CreateDateColumn()
   createdAt: Date;
 
+  @Field((type) => Date)
   @UpdateDateColumn()
   updatedAt: Date;
 }
