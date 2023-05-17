@@ -6,6 +6,7 @@ import { CreateAccountInput } from './dtos/createAccount.dto';
 import { LoginInput } from './dtos/login.dto';
 import { CreateAccountProps, LoginProps } from './interfaces/users.interface';
 import { JwtService } from 'src/jwt/jwt.service';
+import { UpdateProfileInput } from './dtos/edit-profile.dto';
 
 @Injectable()
 export class UsersService {
@@ -76,5 +77,28 @@ export class UsersService {
 
   async findById(id: number): Promise<User> {
     return this.users.findOne({ where: { id } });
+  }
+
+  async updateProfile(
+    userId: number,
+    { mobileNumber, firstName, lastName, password, email }: UpdateProfileInput,
+  ) {
+    const user = await this.users.findOne({ where: { id: userId } });
+    if (firstName) {
+      user.firstName = firstName;
+    }
+    if (lastName) {
+      user.lastName = lastName;
+    }
+    if (mobileNumber) {
+      user.mobileNumber = mobileNumber;
+    }
+    if (password) {
+      user.password = password;
+    }
+    if (email) {
+      user.email = email;
+    }
+    return this.users.save(user);
   }
 }

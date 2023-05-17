@@ -9,6 +9,11 @@ import { LoginInput, LoginOutput } from './dtos/login.dto';
 import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { AuthUser } from 'src/auth/auth.decorator';
+import { UserProfileInput, UserProfileOutput } from './dtos/user-profile.dto';
+import {
+  UpdateProfileInput,
+  UpdateProfileOutput,
+} from './dtos/edit-profile.dto';
 
 @Resolver((of) => User)
 export class UsersResolver {
@@ -18,6 +23,28 @@ export class UsersResolver {
   @UseGuards(AuthGuard)
   me(@AuthUser() authUser: User) {
     return authUser;
+  }
+
+  @Query((returns) => UserProfileOutput)
+  @UseGuards(AuthGuard)
+  async userProfile(
+    @Args() userProfileInput: UserProfileInput,
+  ): Promise<UserProfileOutput> {
+    try {
+      const user = await this.usersService.findById(userProfileInput.userId);
+      if (!user) {
+        throw Error();
+      }
+      return {
+        ok: true,
+        user,
+      };
+    } catch (error: any) {
+      return {
+        ok: false,
+        error: 'User not found.',
+      };
+    }
   }
 
   @Mutation((returns) => CreateAccountOutput)
@@ -35,12 +62,32 @@ export class UsersResolver {
     }
   }
 
+  // Logging in User
   @Mutation((returns) => LoginOutput)
   async login(@Args('input') loginInput: LoginInput): Promise<LoginOutput> {
     try {
       return await this.usersService.login(loginInput);
     } catch (error: any) {
       return { ok: false, error };
+    }
+  }
+
+  @Mutation((returns) => UpdateProfileOutput)
+  @UseGuards(AuthGuard)
+  async updateUserProfile(
+    @AuthUser() authUser: User,
+    @Args('input') updateProfileInput: UpdateProfileInput,
+  ): Promise<UpdateProfileOutput> {
+    try {
+      await this.usersService.updateProfile(authUser.id, updateProfileInput);
+      return {
+        ok: true,
+      };
+    } catch (error: any) {
+      return {
+        ok: false,
+        error,
+      };
     }
   }
 }
