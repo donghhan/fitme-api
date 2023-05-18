@@ -8,6 +8,7 @@ import { CreateAccountProps, LoginProps } from './interfaces/users.interface';
 import { JwtService } from 'src/jwt/jwt.service';
 import { UpdateProfileInput } from './dtos/edit-profile.dto';
 import { Verification } from './entities/verification.entity';
+import { VerifyEmailOutput } from './dtos/verify-email.dto';
 
 @Injectable()
 export class UsersService {
@@ -117,7 +118,7 @@ export class UsersService {
     return this.users.save(user);
   }
 
-  async verifyEmail(code: string): Promise<boolean> {
+  async verifyEmail(code: string): Promise<VerifyEmailOutput> {
     try {
       const verification = await this.verifications.findOne({
         where: { code },
@@ -125,13 +126,14 @@ export class UsersService {
       });
       if (verification) {
         verification.user.verified = true;
-        this.users.save(verification.user);
-        return true;
+        await this.users.save(verification.user);
+        await this.verifications.delete(verification.id);
+        return { ok: true };
       }
       throw new Error();
     } catch (error: any) {
       console.log(error);
-      return false;
+      return { ok: false, error };
     }
   }
 }

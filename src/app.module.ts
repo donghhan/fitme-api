@@ -16,6 +16,7 @@ import { JwtModule } from './jwt/jwt.module';
 import { JwtMiddleware } from './jwt/jwt.middleware';
 import { AuthModule } from './auth/auth.module';
 import { Verification } from './users/entities/verification.entity';
+import { EmailsModule } from './emails/emails.module';
 
 @Module({
   imports: [
@@ -53,6 +54,9 @@ import { Verification } from './users/entities/verification.entity';
         DATABASE_PASSWORD: Joi.string().required(),
         DATABASE_HOST: Joi.string().required(),
         TOKEN_SECRET_KEY: Joi.string().required(),
+        MAILGUN_APIKEY: Joi.string().required(),
+        MAILGUN_DOMAIN_NAME: Joi.string().required(),
+        MAILGUN_FROM: Joi.string().required(),
       }),
     }),
     UsersModule,
@@ -61,6 +65,11 @@ import { Verification } from './users/entities/verification.entity';
       privateKey: process.env.TOKEN_SECRET_KEY,
     }),
     AuthModule,
+    EmailsModule.forRoot({
+      apiKey: process.env.MAILGUN_APIKEY,
+      domain: process.env.MAILGUN_DOMAIN_NAME,
+      from: process.env.MAILGUN_FROM,
+    }),
   ],
   controllers: [],
   providers: [],
