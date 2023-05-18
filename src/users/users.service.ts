@@ -7,11 +7,14 @@ import { LoginInput } from './dtos/login.dto';
 import { CreateAccountProps, LoginProps } from './interfaces/users.interface';
 import { JwtService } from 'src/jwt/jwt.service';
 import { UpdateProfileInput } from './dtos/edit-profile.dto';
+import { Verification } from './entities/verification.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User) private readonly users: Repository<User>,
+    @InjectRepository(Verification)
+    private readonly verifications: Repository<Verification>,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -32,7 +35,7 @@ export class UsersService {
         return { ok: false, error: 'Email is already taken.' };
       }
 
-      await this.users.save(
+      const user = await this.users.save(
         this.users.create({
           email,
           password,
@@ -40,6 +43,13 @@ export class UsersService {
           mobileNumber,
           firstName,
           lastName,
+        }),
+      );
+
+      // Creating verification
+      await this.verifications.save(
+        this.verifications.create({
+          user,
         }),
       );
       return { ok: true };
@@ -54,7 +64,10 @@ export class UsersService {
   async login({ email, password }: LoginInput): Promise<LoginProps> {
     // Find a user with email
     try {
-      const userWithEmail = await this.users.findOne({ where: { email } });
+      const userWithEmail = await this.users.findOne({
+        where: { email },
+        select: ['password', 'id'],
+      });
       if (!userWithEmail) {
         return { ok: false, error: 'User not found.' };
       }
@@ -98,7 +111,27 @@ export class UsersService {
     }
     if (email) {
       user.email = email;
+      user.verified = false;
+      await this.verifications.save(this.verifications.create({ user }));
     }
     return this.users.save(user);
+  }
+
+  async verifyEmail(code: string): Promise<boolean> {
+    try {
+      const verification = await this.verifications.findOne({
+        where: { code },
+        relations: ['user'],
+      });
+      if (verification) {
+        verification.user.verified = true;
+        this.users.save(verification.user);
+        return true;
+      }
+      throw new Error();
+    } catch (error: any) {
+      console.log(error);
+      return false;
+    }
   }
 }

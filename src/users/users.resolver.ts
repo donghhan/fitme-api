@@ -1,4 +1,4 @@
-import { Resolver, Query, Mutation, Args, Context } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
 import { User } from './entities/users.entity';
 import { UsersService } from './users.service';
 import {
@@ -14,6 +14,7 @@ import {
   UpdateProfileInput,
   UpdateProfileOutput,
 } from './dtos/edit-profile.dto';
+import { VerifyEmailInput, VerifyEmailOutput } from './dtos/verify-email.dto';
 
 @Resolver((of) => User)
 export class UsersResolver {
@@ -83,6 +84,19 @@ export class UsersResolver {
       return {
         ok: true,
       };
+    } catch (error: any) {
+      return {
+        ok: false,
+        error,
+      };
+    }
+  }
+
+  @Mutation((returns) => VerifyEmailOutput)
+  async verifyEmail(@Args('input') { code }: VerifyEmailInput) {
+    try {
+      await this.usersService.verifyEmail(code);
+      return { ok: true };
     } catch (error: any) {
       return {
         ok: false,

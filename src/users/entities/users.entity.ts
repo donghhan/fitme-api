@@ -42,21 +42,27 @@ export class User extends CommonEntity {
   isActive: boolean;
 
   @Field((type) => String)
-  @Column()
+  @Column({ select: false })
   password: string;
 
   @Field((type) => String, { nullable: true })
   @Column()
   mobileNumber: string;
 
+  @Field((type) => Boolean)
+  @Column({ default: false })
+  verified: boolean;
+
   @BeforeInsert()
   @BeforeUpdate()
   async hashPassword(): Promise<void> {
-    try {
-      this.password = await bcrypt.hash(this.password, 10);
-    } catch (error: any) {
-      console.log(error);
-      throw new InternalServerErrorException();
+    if (this.password) {
+      try {
+        this.password = await bcrypt.hash(this.password, 10);
+      } catch (error: any) {
+        console.log(error);
+        throw new InternalServerErrorException();
+      }
     }
   }
 
